@@ -222,7 +222,7 @@ article_records = new_soup.find_all("record")
 
 # loop through each article and add the rating and the answer as a new tag
 for i, record in enumerate(article_records):
-    if args.useratingfield:
+    if args.useratingfield.lower() == "true":
         # create a new 'custom3' tag (the default is 'custom3')
         rating_tag = new_soup.new_tag(args.ratingfield)
         rating = ratings[i]  # get the rating for this article
@@ -238,7 +238,7 @@ for i, record in enumerate(article_records):
 
 # create a dataframe from the articles
 results = pd.DataFrame(articles)
-if args.useratingfield:
+if args.useratingfield.lower() == "true":
     results["Rating"] = ratings
 results["Answer"] = answers
 # save the modified XML data to a new file
@@ -258,7 +258,7 @@ except OSError:
     results.to_csv("newfile.csv")
     print("results saved to newfile.")
 
-if args.sleep == "true":
+if args.sleep.lower() == "true":
     import os
 
     os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
