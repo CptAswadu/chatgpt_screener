@@ -1,9 +1,13 @@
 import argparse
 import time
+
+# we want to work with json format
+import json
 from bs4 import BeautifulSoup
 import pandas as pd
 import openai
 from tqdm import tqdm
+
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -23,30 +27,28 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="""Process XML file and evaluate relevance between criteria and articles.
         The format is as follows:
-        [System Prompt (such as role definition)]
-        [Pre-prompt, such as example provision and role definition]
-        [Article Details: Title, Abstract, Published Year, Reference Type]
-        [Prompt (such as criteria)]
-        [Post Prompt (such as rating between 1 and 5)]"""
+        [System Prompt]
+        [ROLE DEFINITION]
+        [TASK DEFINITION]
+        [Article Details in JSON format]
+        [PICOS in JSON format]"""
     )
     parser.add_argument("--xml_file", type=str, help="path to EndNote XML file")
     parser.add_argument(
         "--systemprompt",
         type=str,
-        help="system prompt to be added to the beginning of the article details and criteria",
+        help="system prompt such as role definition (required)",
     )
     parser.add_argument(
         "--preprompt",
         type=str,
-        help="pre prompt to be added to the beginning of the article details and criteria",
+        help="Role Definition (required)",
     )
-    parser.add_argument(
-        "--prompt", type=str, help="prompt such as criteria to be rated"
-    )
+    parser.add_argument("--prompt", type=str, help="Task Definition (required)")
     parser.add_argument(
         "--postprompt",
         type=str,
-        help="post prompt to be added to the end of the article details and criteria",
+        help="PICOS (required)",
     )
     parser.add_argument(
         "--useratingfield",
@@ -96,19 +98,15 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_dict_text(d: dict, delimiter: str = "\n"):
-    """
-    Get the text from a dictionary.
+def get_json(d: dict, **kwargs):
+    """Get JSON format from a dictionary.
 
-    Args: d (dict): The dictionary,
-    delimiter (str): The delimiter to use.
-
-    Returns: str: The text.
+    Args:
+        d (dict): dictionary to be converted to JSON format
+    Returns:
+        json object: JSON object
     """
-    text = ""
-    for key, value in d.items():
-        text += f"{key}: {value}{delimiter}"
-    return text
+    return json.dumps(d, indent=4, **kwargs)
 
 
 args = parse_args()
@@ -175,12 +173,17 @@ for i, article in tqdm(
     postprompt: str = args.postprompt
     systemprompt: str = args.systemprompt
     # replace all '\\n' instances with '\n'
-    prompt = prompt.replace("\\n", "\n")
-    preprompt = preprompt.replace("\\n", "\n")
-    postprompt = postprompt.replace("\\n", "\n")
     systemprompt = systemprompt.replace("\\n", "\n")
-    article_details = get_dict_text(article)
-    content = f"{preprompt}\n{article_details}\n{prompt}\n{postprompt}"
+    preprompt = "\n[ROLE]\n" + preprompt.replace("\\n", "\n")
+    prompt = "\n[TASK]\n" + prompt.replace("\\n", "\n")
+    # we need to convert postprompt to json
+    postprompt = (
+        "\n[PICOS]\n"
+        + get_json({"PICOS": postprompt.replace("\\n", ", ")})
+        + "\n[YOUR ANSWER IN VALID JSON FORMAT]"
+    )
+    article_json = "\n[ARTICLE]\n" + get_json(article)
+    content = f"{preprompt}\n{prompt}\n{article_json}\n{postprompt}"
 
     # Make the API request
     response = make_request(
@@ -194,12 +197,14 @@ for i, article in tqdm(
         ],
         temperature=args.temperature,
     )
-    answer: str = response["choices"][0]["message"]["content"]
-    rating: int = -1
-    for char in answer:
-        if char.isdigit() and int(char) in [num for num in range(1, 10)]:
-            rating = int(char)
-            break
+    answer = response["choices"][0]["message"]["content"]
+    # since the answer is in json format, we need to convert it back to a dictionary
+    try:
+        answer = json.loads(answer)
+    except json.decoder.JSONDecodeError as e:
+        print(e, answer)
+    rating = answer["rating"]
+    answer = answer["answer"]
 
     print(f'\nContent:\n"{content}"\nAnswer:\n"{answer}"\nRating: {rating}\n')
     answers.append(answer)
