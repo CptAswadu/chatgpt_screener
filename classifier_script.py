@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import openai
 from tqdm import tqdm
+import os
+
 
 from tenacity import (
     retry,
@@ -14,7 +16,7 @@ from tenacity import (
     wait_random_exponential,
 )  # for exponential backoff
 
-API_KEY = "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"
+API_KEY = "YOUR_API_KEY_HERE"
 INTERVAL: float = 20.0  # seconds
 
 
@@ -25,7 +27,7 @@ def parse_args():
         argparse.Namespace: The parsed arguments.
     """
     parser = argparse.ArgumentParser(
-        description="""Process XML file and evaluate relevance between criteria and articles.
+        description="""Process XML file and evaluate relevance between PICOS and articles.
         The format is as follows:
         [System Prompt]
         [ROLE DEFINITION]
@@ -55,19 +57,19 @@ def parse_args():
         type=str,
         default="true",
         help='use rating field, default: "true"',
-    )
+    )  # specific to EndNote
     parser.add_argument(
         "--ratingfield",
         type=str,
         default="custom3",
         help='field to store rating in, default: "custom3"',
-    )
+    )  # specific to EndNote
     parser.add_argument(
         "--answerfield",
         type=str,
         default="custom4",
         help='field to store answer in, default: "custom4"',
-    )
+    )  # specific to EndNote
     parser.add_argument("--output", type=str, help="output file name without extension")
     parser.add_argument("--apikey", type=str, default=API_KEY, help="openai api key")
     parser.add_argument(
@@ -109,22 +111,62 @@ def get_json(d: dict, **kwargs):
     return json.dumps(d, indent=4, **kwargs)
 
 
-args = parse_args()
-openai.api_key = args.apikey
-
-
 @retry(wait=wait_random_exponential(min=1, max=30), stop=stop_after_attempt(6))
 def make_request(**kwargs):
+    """
+    Sends a request to the OpenAI API for a chat completion.
+
+    Args:
+        **kwargs: Keyword arguments to be passed to the OpenAI API.
+
+    Returns:
+        dict: A dictionary containing the response from the OpenAI API.
+    """
     return openai.ChatCompletion.create(**kwargs)
 
 
+def get_content(args, article):
+    """
+    Preprocesses the text before sending it to the API and returns the system prompt and content.
+
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+        article (dict): The article to be classified.
+
+    Returns:
+        tuple: A tuple containing the system prompt and content.
+    """
+    prompt: str = args.prompt
+    preprompt: str = args.preprompt
+    postprompt: str = args.postprompt
+    systemprompt: str = args.systemprompt
+    # replace all '\\n' instances with '\n'
+    systemprompt = systemprompt.replace("\\n", "\n")
+    preprompt = "\n[ROLE]\n" + preprompt.replace("\\n", "\n")
+    prompt = "\n[TASK]\n" + prompt.replace("\\n", "\n")
+    # we need to convert postprompt to json
+    postprompt = (
+        "\n[PICOS]\n"
+        + get_json({"PICOS": postprompt.replace("\\n", ", ")})
+        + "\n[YOUR ANSWER IN VALID JSON FORMAT]"
+    )
+    article_json = "\n[ARTICLE]\n" + get_json(article)
+    content = f"{preprompt}\n{prompt}\n{article_json}\n{postprompt}"
+    return systemprompt, content
+
+
+args = parse_args()
+openai.api_key = args.apikey
+
+# read the xml file exported from EndNote
 with open(args.xml_file, "r", encoding="utf-8") as f:
     xml_data = f.read()
 
-
+# parse the xml file
 soup = BeautifulSoup(xml_data, "xml")
 articles = []  # empty array for storing articles
 
+# iterate over each record and extract the title, abstract, reference type and year
 for record in soup.find_all("record"):
     if record.find("titles").find("title"):
         title = record.find("titles").find("title").text
@@ -167,24 +209,8 @@ for i, article in tqdm(
     bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
     colour="green",
 ):
-    # preprocess the text before sending to the API
-    prompt: str = args.prompt
-    preprompt: str = args.preprompt
-    postprompt: str = args.postprompt
-    systemprompt: str = args.systemprompt
-    # replace all '\\n' instances with '\n'
-    systemprompt = systemprompt.replace("\\n", "\n")
-    preprompt = "\n[ROLE]\n" + preprompt.replace("\\n", "\n")
-    prompt = "\n[TASK]\n" + prompt.replace("\\n", "\n")
-    # we need to convert postprompt to json
-    postprompt = (
-        "\n[PICOS]\n"
-        + get_json({"PICOS": postprompt.replace("\\n", ", ")})
-        + "\n[YOUR ANSWER IN VALID JSON FORMAT]"
-    )
-    article_json = "\n[ARTICLE]\n" + get_json(article)
-    content = f"{preprompt}\n{prompt}\n{article_json}\n{postprompt}"
-
+    # assemble the content to be sent to the API
+    systemprompt, content = get_content(args, article)
     # Make the API request
     response = make_request(
         model=args.model,
@@ -209,7 +235,7 @@ for i, article in tqdm(
     print(f'\nContent:\n"{content}"\nAnswer:\n"{answer}"\nRating: {rating}\n')
     answers.append(answer)
     ratings.append(rating)
-    # Delay for 3 seconds to avoid exceeding the API rate limit
+    # Delay to avoid exceeding the API rate limit
     if i < len(articles) - 1:
         time.sleep(args.interval)
 
@@ -259,6 +285,4 @@ except OSError:
     print("results saved to newfile.")
 
 if args.sleep.lower() == "true":
-    import os
-
     os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
