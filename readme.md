@@ -1,3 +1,6 @@
+# ChatGPT Article Screener (Official implementation)
+## Required packages
+argparse, bs4, pandas, openai, tqdm
 ## Sample arguments
 - **output**: "path/to/output/file"
 - **xml_file**: "path/to/input/xml"
