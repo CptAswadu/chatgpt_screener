@@ -1,24 +1,21 @@
-Non-Commercial, Private Use, and Research/Academia License
+ChatGPT Title/Abstract Screener
+Copyright (c) 2023 Mahbod Issaiy
 
-This license ("License") is granted to you ("Licensee") by Mahbod Issaiy ("Licensor") for the use of the software/application/dataset/repository ("Software") hosted on GitHub under the terms and conditions below:
+This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
-1. Grant of License:
-   Licensor hereby grants Licensee a non-exclusive, non-transferable, revocable license to use, copy, modify, and distribute the Software solely for non-commercial, private use, and research/academia purposes.
+You are free to:
 
-2. Restrictions:
-   Licensee shall not use the Software, in whole or in part, for any commercial purposes, including but not limited to selling, distributing, or deriving revenue from the Software. Licensee shall not sublicense, transfer, or assign this License or any rights granted herein.
+- Share — copy and redistribute the material in any medium or format
 
-3. Intellectual Property:
-   This License does not transfer any intellectual property rights to Licensee. All intellectual property rights in the Software remain with Licensor.
+Under the following terms:
 
-4. No Warranty:
-   The Software is provided "as is," without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. Licensor shall not be liable for any damages, whether direct, indirect, incidental, or consequential, arising out of the use or inability to use the Software.
+- Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+- NonCommercial — You may not use the material for commercial purposes.
+- NoDerivatives — If you remix, transform, or build upon the material, you may not distribute the modified material.
 
-5. Termination:
-   This License is effective until terminated by either party. Licensor may terminate this License at any time without prior notice. Upon termination, Licensee shall cease all use of the Software and destroy any copies in their possession.
+No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
 
-6. Governing Law:
-   This License shall be governed by and construed in accordance with the laws of the United States. Any legal action arising out of or relating to this License shall be subject to the exclusive jurisdiction of the courts of the United States.
+Notices:
 
-By using the Software, Licensee acknowledges that they have read, understood, and agreed to be bound by the terms and conditions of this License.
-
+You do not have to comply with the license for elements of the material in the public domain or where your use is permitted by an applicable exception or limitation.
+No warranties are given. The license may not give you all of the permissions necessary for your intended use. For example, other rights such as publicity, privacy, or moral rights may limit how you use the material.
