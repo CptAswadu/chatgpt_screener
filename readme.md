@@ -1,6 +1,9 @@
 # ChatGPT Article Screener (Official implementation)
 ## Required packages
 argparse, bs4, pandas, openai, tqdm
+~~~bash
+pip install -r requirements.txt
+~~~
 ## Sample arguments
 - **output**: "path/to/output/file"
 - **xml_file**: "path/to/input/xml"
