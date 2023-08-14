@@ -1,7 +1,7 @@
 ChatGPT Title/Abstract Screener
 Copyright (c) 2023 Mahbod Issaiy
 
-<img src="https://chooser-beta.creativecommons.org/img/cc-logo.f0ab4ebe.svg" width="50"> <img src="https://chooser-beta.creativecommons.org/img/cc-by.21b728bb.svg" width="50"> <img src="https://chooser-beta.creativecommons.org/img/cc-nc.218f18fc.svg" width="50"> <img src="https://chooser-beta.creativecommons.org/img/cc-nd.de89fdeb.svg" width="50">
+<img src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png">
 
 This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
