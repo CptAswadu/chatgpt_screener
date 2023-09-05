@@ -212,25 +212,29 @@ for i, article in tqdm(
     # assemble the content to be sent to the API
     systemprompt, content = get_content(args, article)
     # Make the API request
-    response = make_request(
-        model=args.model,
-        messages=[
-            {"role": "system", "content": systemprompt},
-            {
-                "role": "user",
-                "content": content,
-            },
-        ],
-        temperature=args.temperature,
-    )
-    answer = response["choices"][0]["message"]["content"]
-    # since the answer is in json format, we need to convert it back to a dictionary
     try:
+        response = make_request(
+            model=args.model,
+            messages=[
+                {"role": "system", "content": systemprompt},
+                {
+                    "role": "user",
+                    "content": content,
+                },
+            ],
+            temperature=args.temperature,
+        )
+        answer = response["choices"][0]["message"]["content"]
+        # since the answer is in json format, we need to convert it back to a dictionary
         answer = json.loads(answer)
-    except json.decoder.JSONDecodeError as e:
-        print(e, answer)
-    rating = answer["rating"]
-    answer = answer["answer"]
+        rating = answer["rating"]
+        answer = answer["answer"]
+
+    except Exception as ex:
+        print(f"Exception: {ex}")
+        answers.append("error")
+        ratings.append("error")
+        continue
 
     print(f'\nContent:\n"{content}"\nAnswer:\n"{answer}"\nRating: {rating}\n')
     answers.append(answer)
