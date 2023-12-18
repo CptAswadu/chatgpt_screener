@@ -8,6 +8,7 @@ import pandas as pd
 import openai
 from tqdm import tqdm
 import os
+from flask import cli
 
 
 from tenacity import (
@@ -16,8 +17,10 @@ from tenacity import (
     wait_random_exponential,
 )  # for exponential backoff
 
-API_KEY = "YOUR_API_KEY_HERE"
-INTERVAL: float = 20.0  # seconds
+# set to False if you want to use the OPENAI_API_KEY environment variable
+API_KEY = False
+
+INTERVAL: float = 0.1  # seconds
 
 
 def parse_args():
@@ -71,7 +74,12 @@ def parse_args():
         help='field to store answer in, default: "custom4"',
     )  # specific to EndNote
     parser.add_argument("--output", type=str, help="output file name without extension")
-    parser.add_argument("--apikey", type=str, default=API_KEY, help="openai api key")
+    parser.add_argument(
+        "--apikey",
+        type=str,
+        default=os.environ.get("OPENAI_API_KEY") or API_KEY,
+        help="openai api key",
+    )
     parser.add_argument(
         "--model",
         type=str,
@@ -122,7 +130,8 @@ def make_request(**kwargs):
     Returns:
         dict: A dictionary containing the response from the OpenAI API.
     """
-    return openai.ChatCompletion.create(**kwargs)
+    c: openai.Client = kwargs.pop("client")
+    return c.chat.completions.create(**kwargs)
 
 
 def get_content(args, article):
@@ -156,7 +165,7 @@ def get_content(args, article):
 
 
 args = parse_args()
-openai.api_key = args.apikey
+client = openai.OpenAI(api_key=args.apikey)
 
 # read the xml file exported from EndNote
 with open(args.xml_file, "r", encoding="utf-8") as f:
@@ -214,6 +223,7 @@ for i, article in tqdm(
     # Make the API request
     try:
         response = make_request(
+            client=client,
             model=args.model,
             messages=[
                 {"role": "system", "content": systemprompt},
@@ -224,7 +234,7 @@ for i, article in tqdm(
             ],
             temperature=args.temperature,
         )
-        answer = response["choices"][0]["message"]["content"]
+        answer = response.choices[0].message.content
         # since the answer is in json format, we need to convert it back to a dictionary
         answer = json.loads(answer)
         rating = answer["rating"]
