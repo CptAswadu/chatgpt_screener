@@ -1,5 +1,6 @@
 argparse
-bs4
+beautifulsoup4
 pandas
 openai
 tqdm
+tenacity

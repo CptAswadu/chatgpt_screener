@@ -14,15 +14,11 @@ pip install -r requirements.txt
 
 ### 📦 Required Packages
 
-- argparse
-- bs4
+- beautifulsoup4
 - pandas
 - openai
 - tqdm
 - tenacity
-- json
-- time
-- os
 
 ---
 

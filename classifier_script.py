@@ -1,16 +1,11 @@
 import argparse
 import time
-
-# we want to work with json format
 import json
 from bs4 import BeautifulSoup
 import pandas as pd
 import openai
 from tqdm import tqdm
 import os
-from flask import cli
-
-
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -20,7 +15,7 @@ from tenacity import (
 # set to False if you want to use the OPENAI_API_KEY environment variable
 API_KEY = False
 
-INTERVAL: float = 0.1  # seconds
+INTERVAL: float = 20  # seconds
 
 
 def parse_args():
@@ -298,5 +293,5 @@ except OSError:
     results.to_csv("newfile.csv")
     print("results saved to newfile.")
 
-if args.sleep.lower() == "true":
+if args.sleep.lower() == "true" and os.name == "nt":
     os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
